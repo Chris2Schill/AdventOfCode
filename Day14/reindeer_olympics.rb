@@ -1,5 +1,6 @@
 class Reindeer
-    attr_accessor :name, :velocity, :endurance, :sleep, :stamina, :distance, :alarm
+    attr_accessor :distance
+
     def initialize name, velocity, endurance, sleep
         @name = name 
         @velocity = velocity
@@ -7,52 +8,70 @@ class Reindeer
         @sleep = sleep
         @stamina = endurance
         @distance = 0
-        @alarm = 0  
+        @fatigue = 0  
     end
 
-    def print
-        puts "#{@name} #{@velocity} #{@endurance} #{@sleep} #{@stamina} #{@distance} #{@alarm}"
+    def take_turn
+        if @stamina > 0
+            keep_flying()
+            go_to_sleep if @stamina <= 0
+        elsif @fatigue > 0
+            rest
+        end
+
+        wake_up if @stamina <= 0 and @fatigue <= 0
+
+    end
+    
+    private
+    def keep_flying
+        @distance += @velocity 
+        @stamina -= 1
+    end
+
+    private
+    def go_to_sleep
+        @fatigue = @sleep
+    end
+
+    private
+    def rest
+        @fatigue -= 1
+    end
+
+    private
+    def wake_up
+        @stamina = @endurance
     end
 end
 
-reindeers = Array.new
+def getReindeers
+    reindeers = Array.new
+    File.readlines('Day14/input.txt').each do |line|
+        name = line.split(' ').first
 
-File.readlines('input.txt').each do |line|
-    name = line.split(' ').first
-    attributes_match = line.scan(/[0-9]+/)
-    velocity = attributes_match[0].to_i
-    endurance = attributes_match[1].to_i
-    sleep = attributes_match[2].to_i
+        attributes_match = line.scan(/[0-9]+/)
+        velocity = attributes_match[0].to_i
+        endurance = attributes_match[1].to_i
+        sleep = attributes_match[2].to_i
 
-    reindeers << Reindeer.new(name, velocity, endurance, sleep) 
+        reindeers << Reindeer.new(name, velocity, endurance, sleep) 
+    end
+    reindeers
 end
 
-reindeers.each {|r| r.print}
-
+reindeers = getReindeers()
 maxDistance = 0
 2503.times do |second|
-
-    puts "------Second: #{second+1}------"
+#    puts "------Second: #{second+1}------"
     reindeers.each do |reindeer|
-        if reindeer.stamina > 0
-            reindeer.distance += reindeer.velocity 
-            reindeer.stamina -= 1
-            reindeer.alarm = reindeer.sleep if reindeer.stamina == 0
-        elsif reindeer.alarm > 0
-            reindeer.alarm -= 1
-        end
-
-        if reindeer.stamina <= 0 and reindeer.alarm <= 0
-            reindeer.stamina = reindeer.endurance
-        end
-
+        reindeer.take_turn
         if reindeer.distance > maxDistance
             maxDistance = reindeer.distance
         end
-        puts "#{reindeer.name} traveled #{reindeer.distance}"
+#        puts "#{reindeer.name} traveled #{reindeer.distance}"
     end
-    puts
-    
+#    puts
 end
 
-puts maxDistance
+puts "Max Distance: #{maxDistance}"
