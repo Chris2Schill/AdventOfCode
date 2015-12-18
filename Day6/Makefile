@@ -1,0 +1,2 @@
+make:
+	ruby lights.rb
