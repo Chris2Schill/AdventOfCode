@@ -11,6 +11,7 @@ class Point
         self.store
     end
 
+    private 
     def store
         unless self.visited?
             @@visited.push(self)
@@ -18,6 +19,7 @@ class Point
         end
     end
 
+    private
     def visited?
         @@visited.each do |p|
             return true if self.x == p.x and self.y == p.y
@@ -71,6 +73,7 @@ File.open('input.txt').each_char do |c|
     end
     Point.new
 end
+
 Point.new
 Point.showVisited
 p Point.delivered
