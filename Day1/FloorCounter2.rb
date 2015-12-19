@@ -1,7 +1,7 @@
 def findPosition
     floor = 0
     charPosition = 0
-    File.open("Day1/input.txt") do |f|
+    File.open("input.txt") do |f|
         f.each_char do |c|
             if c == '('
                 floor += 1
