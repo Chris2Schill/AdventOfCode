@@ -1,13 +1,15 @@
 $input = 36000000
-$houses = Array.new(2000000){0}
+$houses = Array.new
 $house_over_input = Array.new
 
 class Elf
-    attr_accessor :id
-    @@total_elves = 0
+
+    attr_accessor :id, :presents
+    @@elves = Array.new
+
     def initialize
-        @@total_elves += 1
-        @id = @@total_elves
+        @@elves << self
+        @id = @@elves.size
         @presents = @id*10
     end
 
@@ -22,10 +24,21 @@ class Elf
         end
     end
 
+    def deliver2
+        presents = 0
+        if @@elves.size % 2 == 0 and @@elves.size % 3 == 0
+            @@elves.each do |elf|
+                presents += elf.presents if @@elves.size % elf.id == 0
+            end
+            $houses[@@elves.size] = presents
+        else
+            $houses[@@elves.size] = 0
+        end
+    end
 end
 
-2000000.times do
-    Elf.new.deliver
+250000.times do
+    Elf.new.deliver2
 end
 
 def test
@@ -47,6 +60,8 @@ def test
 end
 
 test
-p $house_over_input.first
 
+$houses.size.times do |i|
+    puts "House #{i+1}: #{$houses[i+1]}" if $houses[i+1] != 0
+end
 
