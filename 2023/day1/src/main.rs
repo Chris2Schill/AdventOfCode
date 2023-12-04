@@ -2,9 +2,21 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 use regex::RegexSet;
-// use core::cmp::Ordering;
-// use std::iter::successors;
 
+fn main() {
+    let mut sum_part_one = 0;
+    let mut sum_part_two = 0;
+    if let Ok(lines) = read_lines("./day1.in") {
+        for line in lines {
+            let aline = &line.unwrap();
+            sum_part_one += value_part_one(aline);
+            sum_part_two += value_part_two(aline);
+        }
+    }
+
+    println!("Sum (Part 1):{sum_part_one}\nSum (Part 2):{sum_part_two}");
+
+}
 
 fn value_part_one(line: &str) -> i32 {
     let mut value = 0;
@@ -96,21 +108,6 @@ fn value_part_two(line: &str) -> i32 {
     }
 
     return find_first_digit(line)*10 + find_second_digit(line);
-}
-
-fn main() {
-    let mut sum_part_one = 0;
-    let mut sum_part_two = 0;
-    if let Ok(lines) = read_lines("./day1.in") {
-        for line in lines {
-            let aline = &line.unwrap();
-            sum_part_one += value_part_one(aline);
-            sum_part_two += value_part_two(aline);
-        }
-    }
-
-    println!("Sum (Part 1):{sum_part_one}\nSum (Part 2):{sum_part_two}");
-
 }
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
