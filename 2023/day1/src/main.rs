@@ -76,6 +76,7 @@ fn value_part_two2(line: &str) -> i32 {
                     idx -= 9;
                 }
                 nums.push(idx);
+                break;
             }
         }
         i += 1;
