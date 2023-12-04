@@ -5,7 +5,7 @@ use std::path::Path;
 fn main() {
     let mut sum_part_one = 0;
     let mut sum_part_two = 0;
-    if let Ok(lines) = read_lines("./day1.in") {
+    if let Ok(lines) = read_lines("day1.in") {
         for line in lines {
             let aline = &line.unwrap();
             sum_part_one += value_part_one(aline);
