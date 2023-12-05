@@ -9,7 +9,7 @@ fn main() {
         for line in lines {
             let aline = &line.unwrap();
             sum_part_one += value_part_one(aline);
-            sum_part_two += value_part_two2(aline);
+            sum_part_two += value_part_two(aline);
         }
     }
 
@@ -35,7 +35,7 @@ fn value_part_one(line: &str) -> i32 {
 }
 
 
-fn value_part_two2(line: &str) -> i32 {
+fn value_part_two(line: &str) -> i32 {
     const NUM_TEXT: [&str; 19] = [
         "zero",
         "one",
