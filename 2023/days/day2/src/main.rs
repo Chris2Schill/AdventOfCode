@@ -2,6 +2,34 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 use std::str::FromStr;
+use std::cmp;
+
+fn main() {
+    let mut sum_game_ids = 0;
+    let mut sum_min_bag_powers = 0;
+    let bag: Bag = Bag {red:12, green:13, blue:14};
+    if let Ok(lines) = read_lines("days/day2/day2.in") {
+        for line in lines {
+            let aline = &line.unwrap();
+
+            let game = Game::from_str(aline);
+            match game {
+                Ok(g) => {
+                    // part one
+                    sum_game_ids += is_game_possible(&bag, &g);
+
+                    // part two
+                    let bag = min_bag_required_for_game(&g);
+                    sum_min_bag_powers += power_of_bag(&bag);
+                },
+                Err(_) => {},
+            }
+        }
+    }
+
+    println!("Sum game ids:{sum_game_ids}");
+    println!("Sum min bag powers:{sum_min_bag_powers}");
+}
 
 struct Bag
 {
@@ -10,6 +38,13 @@ struct Bag
     blue:  i32,
 }
 
+struct Game
+{
+    id: i32,
+    bags: Vec<Bag>,
+}
+
+// Constructs a Bag from a string like "blue 1, green 3, red 4"
 impl FromStr for Bag {
     type Err = std::num::ParseIntError;
     fn from_str(bag_str: &str) -> Result<Self, Self::Err> {
@@ -38,12 +73,8 @@ impl FromStr for Bag {
     }
 }
 
-struct Game
-{
-    id: i32,
-    bags: Vec<Bag>,
-}
 
+// Constructs a Game from a string like "Game 1: blue 1, green 3, red 4; blue 3, green 3"
 impl FromStr for Game {
     type Err = std::string::ParseError;
     fn from_str(bag_str: &str) -> Result<Self, Self::Err> {
@@ -76,41 +107,29 @@ impl FromStr for Game {
 }
 
 
-fn main() {
-
-    let mut sum_game_ids = 0;
-    let bag: Bag = Bag {red:12, green:13, blue:14};
-    if let Ok(lines) = read_lines("days/day2/day2.in") {
-        for line in lines {
-            let aline = &line.unwrap();
-            let game_id = is_game_possible(&bag, aline);
-            match game_id
-            {
-                Some(id) => sum_game_ids += id,
-                None => {},
-            }
+fn is_game_possible(bag: &Bag, game: &Game) -> i32 {
+    for sub_bag in &game.bags {
+        if sub_bag.red > bag.red || sub_bag.green > bag.green || sub_bag.blue > bag.blue {
+            return 0;
         }
     }
-
-    println!("Sum game ids:{sum_game_ids}");
+    return game.id;
 }
 
-fn is_game_possible(bag: &Bag, line: &str) -> Option<i32> {
-    let game = Game::from_str(line);
+fn min_bag_required_for_game(game: &Game) -> Bag {
+    let mut bag: Bag = Bag { red:0, green:0, blue:0 };
 
-    match game {
-        Ok(g) => {
-            for sub_bag in g.bags {
-                if sub_bag.red > bag.red || sub_bag.green > bag.green || sub_bag.blue > bag.blue {
-                    return None;
-                }
-            }
-            return Some(g.id);
-        },
-        Err(e) => {},
+    for b in &game.bags {
+        bag.red = cmp::max(b.red, bag.red);
+        bag.green = cmp::max(b.green, bag.green);
+        bag.blue = cmp::max(b.blue, bag.blue);
     }
 
-    return Some(10);
+    return bag;
+}
+
+fn power_of_bag(bag: &Bag) -> i32 {
+    return bag.red * bag.green * bag.blue;
 }
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
