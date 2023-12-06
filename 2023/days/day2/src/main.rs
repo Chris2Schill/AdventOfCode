@@ -73,7 +73,6 @@ impl FromStr for Bag {
     }
 }
 
-
 // Constructs a Game from a string like "Game 1: blue 1, green 3, red 4; blue 3, green 3"
 impl FromStr for Game {
     type Err = std::string::ParseError;
