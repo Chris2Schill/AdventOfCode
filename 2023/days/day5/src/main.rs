@@ -1,11 +1,46 @@
 use std::fs;
 use std::fmt;
+use std::collections::HashMap;
 
 fn main() {
     let alminac = parse("days/day5/day5.in");
 
-    let min_location = alminac.seeds.iter().map(|s| location(*s, &alminac)).collect::<Vec<_>>().into_iter().min().unwrap();
-    println!("min location:{}", min_location);
+    // part 1
+    let min_location = alminac.seeds.iter()
+                                    .map(|s| location(*s, &alminac))
+                                    .collect::<Vec<_>>()
+                                    .into_iter()
+                                    .min();
+
+    println!("min location:{}", min_location.unwrap_or(0));
+
+
+    // Part 2
+    let mut locations_cache: HashMap<i64, i64> = HashMap::new();
+    let mut min_location2: i64 = i64::MAX;
+    alminac.seeds.chunks(2)
+                 .map(|s|  [s[0],s[1]])
+                 .for_each(|[s,r]| {
+                     // println!("{s},{e}");
+                     // let l = (s..s+e+1)
+                     //     .map(|j| location(j, &alminac))
+                     //     .collect::<Vec<_>>()
+                     //     .into_iter()
+                     //     .min().unwrap();
+
+                     for i in s..s+r+1 {
+                         let loc = locations_cache.get(&i);
+                         match loc {
+                             Some(_) => {},
+                             None => { 
+                                 let new_loc = location(i, &alminac);
+                                 locations_cache.insert(i, new_loc);
+                                 min_location2 = i64::min(new_loc, min_location2);
+                             }
+                         }
+                     }
+                 });
+    println!("min location2:{min_location2}");
 }
 
 fn location(seed: i64, alminac: &Alminac) -> i64 {
@@ -32,6 +67,7 @@ fn parse(file: &str) -> Alminac
                               dest_start: ns[0],
                               src_start: ns[1],
                               range: ns[2],
+                              min_index: i64::MAX,
                           })
                       }
                       else {
@@ -101,6 +137,7 @@ struct Entry {
     dest_start: i64,
     src_start: i64,
     range: i64,
+    min_index: i64,
 }
 
 impl fmt::Display for Entry {
