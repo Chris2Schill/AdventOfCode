@@ -66,8 +66,7 @@ fn parse(file: &str) -> Alminac
                           Some(Entry {
                               dest_start: ns[0],
                               src_start: ns[1],
-                              range: ns[2],
-                              min_index: i64::MAX,
+                              range: ns[2]
                           })
                       }
                       else {
@@ -137,7 +136,6 @@ struct Entry {
     dest_start: i64,
     src_start: i64,
     range: i64,
-    min_index: i64,
 }
 
 impl fmt::Display for Entry {
