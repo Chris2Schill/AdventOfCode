@@ -4,13 +4,35 @@ use std::cmp::Ordering;
 
 fn main() {
     let mut hands = parse("./days/day7/day7.in");
+
+    // Part 1
     hands.sort_by(|a,b| {
-        cmp_hand_strength(a,b)
+        cmp_hand_strength(&a,&b)
     });
-    let mut total_winnings = 0;
-    hands.iter().rev().enumerate().for_each(|(i,h)| total_winnings += (i as i32 +1)*h.bid );//println!("rank:{}, bid:{}", i, h.bid)).collect::<Vec<_>>();
+    fn sum_winnings(hands: &Vec<Hand>) -> i32 {
+        let mut sum = 0;
+        hands.iter().rev().enumerate().for_each(|(i,h)| sum += ((i+1) as i32) * h.bid );
+        return sum;
+    }
+    let total_winnings = sum_winnings(&hands);
     println!("Total Winnings:{total_winnings}");
-    // println!("{:?}", hands);
+
+
+    // Part 2
+    for i in 0..hands.len() {
+        let new_hand_type = collapse_joker_wavefunction(&hands[i]);
+        if let Some(ht) = new_hand_type {
+            hands[i].hand_type = ht;
+        }
+    }
+    hands.sort_by(|a,b| {
+        cmp_hand_strength_jokers_weakest(&a,&b)
+    });
+    let total_winnings2 = sum_winnings(&hands);
+    // for h in hands.iter().rev() {
+    //     println!("hand:{}, type={}, bid={}", h.hand, h.hand_type as i32, h.bid);
+    // }
+    println!("Total Winnings2:{total_winnings2}");
 }
 
 #[repr(i32)]
@@ -25,7 +47,7 @@ enum HandType {
     FiveOfAKind = 6,
 }
 
-fn card_value(c: &char) -> Option<usize> {
+fn card_value(c: char) -> Option<usize> {
     match c {
         '2' =>  Some(0),
         '3' =>  Some(1),
@@ -44,11 +66,83 @@ fn card_value(c: &char) -> Option<usize> {
     }
 }
 
+fn card_value_jokers_weakest(c: char) -> Option<usize> {
+    match c {
+        'J' =>  Some(0),
+        '2' =>  Some(1),
+        '3' =>  Some(2),
+        '4' =>  Some(3),
+        '5' =>  Some(4),
+        '6' =>  Some(5),
+        '7' =>  Some(6),
+        '8' =>  Some(7),
+        '9' =>  Some(8),
+        'T' =>  Some(9),
+        'Q' =>  Some(10),
+        'K' =>  Some(11),
+        'A' =>  Some(12),
+        _   =>  None,
+    }
+}
+
+fn collapse_joker_wavefunction(hand: &Hand) -> Option<HandType> {
+
+    let mut cards: [i32; 13] = [0;13];
+
+    for c in hand.hand.chars() {
+        if let Some(v) = card_value_jokers_weakest(c) {
+            cards[v] += 1;
+        }
+    }
+
+    // never collapse jokers to J
+    cards[card_value_jokers_weakest('J').unwrap()] = 0;
+
+    let mut highest_max_idx = cards.len()-1;
+    let mut max_cards = 0;
+
+    for i in (0..cards.len()).rev() {
+        if cards[i] > max_cards {
+            max_cards = cards[i];
+            highest_max_idx = i;
+        }
+    }
+
+    fn card_from_idx(idx: usize) -> Option<char> {
+        match idx {
+            0  => { Some('J') },
+            1  => { Some('2') },
+            2  => { Some('3') },
+            3  => { Some('4') },
+            4  => { Some('5') },
+            5  => { Some('6') },
+            6  => { Some('7') },
+            7  => { Some('8') },
+            8  => { Some('9') },
+            9  => { Some('T') },
+            10 => { Some('Q') },
+            11 => { Some('K') },
+            12 => { Some('A') },
+            _  => { None },
+        }
+    }
+
+    let replacing_card = card_from_idx(highest_max_idx);
+    if let Some(c) = replacing_card {
+        let collapsed_hand = str::replace(&hand.hand,"J", &c.to_string());
+        // println!("hand:{} | highest_max_idx={highest_max_idx},amnt={max_cards}, collapsed_hand={collapsed_hand}", hand.hand);
+        return Some(classify(&collapsed_hand));
+    }
+
+    return Some(hand.hand_type);
+}
+
 fn classify(hand: &str) -> HandType {
+
     let mut cards: [i32; 13] = [0;13];
 
     for c in hand.chars() {
-        if let Some(v) = card_value(&c) {
+        if let Some(v) = card_value(c) {
             cards[v] += 1;
         }
     }
@@ -99,20 +193,54 @@ fn classify(hand: &str) -> HandType {
 // return less if left should come before right
 fn cmp_hand_strength(left: &Hand, right: &Hand) -> Ordering {
 
-    if left.hand_type as i32 == right.hand_type as i32 {
+    let l_type = left.hand_type as i32;
+    let r_type = right.hand_type as i32;
+
+    if l_type == r_type{
         for i in 0..5 {
-            let v_left = card_value(&left.hand.chars().nth(i).unwrap());
-            let v_right = card_value(&right.hand.chars().nth(i).unwrap());
+            let v_left = card_value(left.hand.chars().nth(i).unwrap());
+            let v_right = card_value(right.hand.chars().nth(i).unwrap());
             if v_left > v_right {
+                // println!("left={left}, right={right} left > right");
                 return Ordering::Less;
             }
             else if v_left < v_right {
-                return Ordering::Greater
+                // println!("left={left}, right={right} left < right");
+                return Ordering::Greater;
             }
         }
+        return Ordering::Equal;
     }
 
-    if left.hand_type as i32 > right.hand_type as i32 {
+    if l_type > r_type {
+        return Ordering::Less;
+    }
+
+    return Ordering::Greater;
+}
+
+fn cmp_hand_strength_jokers_weakest(left: &Hand, right: &Hand) -> Ordering {
+
+    let l_type = left.hand_type as i32;
+    let r_type = right.hand_type as i32;
+
+    if l_type == r_type{
+        for i in 0..5 {
+            let v_left = card_value_jokers_weakest(left.hand.chars().nth(i).unwrap());
+            let v_right = card_value_jokers_weakest(right.hand.chars().nth(i).unwrap());
+            if v_left > v_right {
+                // println!("left={left}, right={right} left > right");
+                return Ordering::Less;
+            }
+            else if v_left < v_right {
+                // println!("left={left}, right={right} left < right");
+                return Ordering::Greater;
+            }
+        }
+        return Ordering::Equal;
+    }
+
+    if l_type > r_type {
         return Ordering::Less;
     }
 
