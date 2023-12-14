@@ -3,32 +3,78 @@ use std::collections::HashMap;
 use regex::Regex;
 
 fn main() {
-    let map = parse("./days/day8/day8.in");
+    let (map,branches) = parse("./days/day8/day8.in");
     let char_map = generate_char_to_int_mapping();
     
+    // part1
     let mut curr = char_map["AAA"];
     let goal = char_map["ZZZ"];
-
     let mut steps = 0;
     while curr != goal {
         for c in map.directions.chars() {
             match c {
                 'L' => {
-                    curr = map.nodes[&curr].0;
+                    curr = map.nodes[&curr].u_left;
                     steps += 1;
                 },
                 'R' => {
-                    curr = map.nodes[&curr].1;
+                    curr = map.nodes[&curr].u_right;
                     steps += 1;
                 },
                  _  => {},
             }
         }
     }
-    println!("Steps:{steps}");
+    println!("Steps (Part 1):{steps}");
+
+    // part2
+    steps = 0;
+    let mut quit = false;
+    while !quit {
+        for c in map.directions.chars() {
+            let mut zs = 0;
+
+            fn is_z(m: &Map, n: &usize) -> usize {
+                if m.nodes[&n].last_char == 'Z' {
+                    return 1;
+                }
+                return 0;
+            }
+
+
+            for mut b in &branches {
+                match c {
+                    'L' => {
+                        b = &map.nodes[&b].u_left;
+                        zs += is_z(&map, b);
+                    },
+                    'R' => {
+                        b = &map.nodes[&b].u_right;
+                        zs += is_z(&map, b);
+                    },
+                    _  => {},
+                }
+            }
+            steps += 1;
+
+            if zs == branches.len() {
+                quit = true;
+                println!("Steps (Part 2):{steps}");
+                break;
+            }
+        }
+    }
+
+    println!("Steps (Part 2):{steps}");
+    println!("branches.len={}", branches.len());
 }
 
-struct Node(usize,usize);
+struct Node {
+    u_left: usize,
+    u_right: usize,
+
+    last_char: char,
+}
 type CharMap = HashMap<String, usize>;
 type NodesMap = HashMap<usize, Node>;
 
@@ -36,9 +82,11 @@ fn print_char_value_pair(s: &str, char_to_int_map: &CharMap) {
     println!("{}={}", s, char_to_int_map[s]);
 }
 
+type Branch = usize;
+
 struct Map {
     directions: String,
-    nodes: NodesMap
+    nodes: NodesMap,
 }
 
 const CHARS: [char; 26] = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
@@ -69,9 +117,10 @@ fn generate_char_to_int_mapping() -> CharMap {
     return map;
 }
 
-fn parse(file: &str) -> Map {
+fn parse(file: &str) -> (Map, Vec<Branch>) {
 
     let mut nodes: NodesMap = NodesMap::new();
+    let mut branches: Vec<Branch> = Vec::new();
 
     let char_map = generate_char_to_int_mapping();
 
@@ -83,12 +132,20 @@ fn parse(file: &str) -> Map {
         for (_,[key, left, right]) in re.captures_iter(line).map(|c| c.extract()) {
             println!("[{key},{left},{right}]");
             let k = char_map[key];
-            let node: Node = Node(char_map[left], char_map[right]);
+            let node: Node = Node{
+                u_left:  char_map[left],
+                u_right: char_map[right],
+                last_char: key.chars().nth(2).unwrap(),
+            };
             nodes.insert(k, node);
+
+            if key.chars().nth(2).unwrap() == 'A' {
+                branches.push(k); 
+            }
         }
     }
     println!("firstline={}", lines.get(0).unwrap());
     let directions = lines.get(0).unwrap().to_string();
 
-    return Map{directions, nodes};
+    return (Map{directions, nodes}, branches);
 }
