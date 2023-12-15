@@ -1,41 +1,12 @@
 use std::fs;
 
 fn main() {
-    let mut sum = 0;
-    let mut sequences = parse("./days/day9/day9.in");
-    for seq in sequences.iter_mut() {
-        println!("original = {:?}", seq);
-        sum += predict(seq);
-    }
+    let sequences = parse("./days/day9/day9.in");
+    let sum: i32 = sequences.into_iter().map(|seq| predict(seq)).sum();
     println!("Sum Predictions:{sum}");
-    // let s: Vec<i32> = Vec::new();
-    // predict(s);
 }
 
-fn predict(seq: &mut Vec<i32>) -> i32 {
-
-    // base case
-    let mut all_zero = true;
-    seq.iter().for_each(|i| all_zero &= *i == 0 );
-    if all_zero { return 0; }
-
-
-    let next_seq = seq.windows(2)
-                      .map(|w| w[1]-w[0])
-                      .collect::<Vec<_>>();
-
-    // let &mut next_seq_mut: &mut Vec<i32> = &next_seq.as_mut();
-
-
-    print!("next = {:?}", next_seq);
-    let prediction = predict2(next_seq) + seq.last().unwrap();
-
-    println!(" -> {prediction}");
-    return prediction;
-}
-
-
-fn predict2(seq: Vec<i32>) -> i32 {
+fn predict(seq: Vec<i32>) -> i32 {
 
     // base case
     let mut all_zero = true;
@@ -48,7 +19,7 @@ fn predict2(seq: Vec<i32>) -> i32 {
 
     println!("next = {:?}", next_seq);
 
-    let prediction = predict2(next_seq) + seq.last().unwrap();
+    let prediction = predict(next_seq) + seq.last().unwrap();
 
     println!(" -> {prediction}");
     return prediction;
